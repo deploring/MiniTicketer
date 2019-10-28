@@ -1,12 +1,12 @@
 CREATE SCHEMA MiniTicketer; -- This only needs to be done once.
-USE SCHEMA MiniTicketer;
+USE MiniTicketer;
+
+-- WARNING: Checks will be parsed but not enforced in versions of MySQL < 8.0!!
 
 CREATE TABLE Genre (
 	`genre` CHAR(20) NOT NULL, -- Denotes name of genre.
 	PRIMARY KEY(`genre`)
 );
-
--- WARNING: Checks will be parsed but not enforced in versions of MySQL < 8.0!!
 
 CREATE TABLE Movie (
 	`name` CHAR(60) NOT NULL, -- Denotes name of movie.
@@ -43,24 +43,17 @@ CREATE TABLE Screening (
 
 CREATE TABLE Screening_Times (
 	`screening_id` INT UNSIGNED NOT NULL, -- Screening that this time slot applies to.
-	`screening_time` CHAR(4) NOT NULL, -- A specified time slot for this screening.
-	PRIMARY KEY(`screening_id`, `screening_time`),
-	FOREIGN KEY (`screening_id`) REFERENCES Screening(`screening_id`) -- FK1
-);
-
-CREATE TABLE Screening_Days (
-	`screening_id` INT UNSIGNED NOT NULL, -- Screening that this available day applies to.
+	`screening_time` CHAR(5) NOT NULL, -- A specified time slot for this screening.
 	`screening_day` CHAR(9) NOT NULL, -- A specified available day for this screening.
-	PRIMARY KEY(`screening_id`, `screening_day`),
+	PRIMARY KEY(`screening_id`, `screening_time`, `screening_day`),
 	FOREIGN KEY (`screening_id`) REFERENCES Screening(`screening_id`) -- FK1
 );
 
 CREATE TABLE Ticket (
 	`screening_id` INT UNSIGNED NOT NULL, -- Screening that this ticket has a booking with.
 	`selected_date` TIMESTAMP NOT NULL, -- Selected screening date.
-	`selected_time` CHAR(4) NOT NULL, -- Selected screening time.
 	`allocated_seat` CHAR(3) NOT NULL, -- Allocated seat number.
 	`username` CHAR(16) NOT NULL, -- Username of booking holder.
-	PRIMARY KEY(`screening_id`, `selected_date`, `selected_time`, `allocated_seat`),
+	PRIMARY KEY(`screening_id`, `selected_date`, `allocated_seat`),
 	FOREIGN KEY (`screening_id`) REFERENCES Screening(`screening_id`) -- FK1
 );

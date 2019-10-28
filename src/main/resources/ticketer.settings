@@ -1,0 +1,12 @@
+###################################
+# MySQL Server Configuration File #
+###################################
+#  Modify settings as needed to   #
+#  establish connection to your   #
+#  MySQL server!                  #
+###################################
+mysql_user=root
+mysql_pass=password
+mysql_host=127.0.0.1
+mysql_port=3306
+mysql_database=MiniTicketer

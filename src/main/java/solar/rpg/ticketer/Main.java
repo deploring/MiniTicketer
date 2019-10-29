@@ -14,7 +14,8 @@ public class Main {
         MainView displayFrame = new MainView();
         // Set JFrame attributes
         displayFrame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
-        displayFrame.setSize(1000, 700);
+        displayFrame.setSize(740, 680);
+        displayFrame.setMinimumSize(new Dimension(740, 680));
         displayFrame.setResizable(true);
         displayFrame.setVisible(true);
         // Set the frame to display in the center of the screen.

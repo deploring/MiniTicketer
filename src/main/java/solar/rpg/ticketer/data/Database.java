@@ -1,6 +1,6 @@
 package solar.rpg.ticketer.data;
 
-import solar.rpg.ticketer.controller.TicketController;
+import solar.rpg.ticketer.controller.DataController;
 import solar.rpg.ticketer.models.*;
 
 import javax.swing.*;
@@ -23,8 +23,8 @@ public class Database {
     private final String user, pass, url, database;
     private Connection connection;
 
-    // Reference to TicketController for utility methods.
-    private TicketController controller;
+    // Reference to DataController for utility methods.
+    private DataController controller;
 
     /**
      * @param user     MySQL server username.
@@ -33,7 +33,7 @@ public class Database {
      * @param port     MySQL server port.
      * @param database Name of schema/database on MySQL server.
      */
-    public Database(TicketController controller, String user, String pass, String hostname, String port, String database) {
+    public Database(DataController controller, String user, String pass, String hostname, String port, String database) {
         this.controller = controller;
 
         // Create database settings.
@@ -359,8 +359,9 @@ public class Database {
      * This also includes the screening times that are closely related to the screenings.
      *
      * @param screenings Provided map that the loaded screenings will be added in to.
+     * @param currentGenres Provided map that tracks what genres exist in the current set of screenings.
      */
-    public void loadScreenings(HashMap<Integer, Screening> screenings) throws SQLException {
+    public void loadScreenings(HashMap<Integer, Screening> screenings, HashMap<String, Integer> currentGenres) throws SQLException {
         // This SQL query selects all screenings and their screening times, which are in a separate table.
         // Do not load in screenings that a. are not in their date range yet or b. have left their date range.
         ResultSet result = prepare("SELECT * FROM `Screening` NATURAL JOIN `Screening_Times` WHERE `start_date` < CURRENT_TIMESTAMP AND `end_date` > CURRENT_TIMESTAMP ORDER BY `screening_id`").executeQuery();
@@ -371,6 +372,11 @@ public class Database {
             Timestamp endDate = result.getTimestamp("end_date");
             Movie movie = controller.findMovieByTitle(result.getString("movie_name"));
             Venue venue = controller.findVenueByID(result.getInt("venue_no"));
+
+            // Check to see if this genre has been seen yet; add it if it hasn't.
+            String genre = movie.getGenre();
+            if(!currentGenres.containsKey(genre))
+                currentGenres.put(genre, currentGenres.size());
 
             List<ScreeningTime> times = new ArrayList<>();
             // Continually loop until we have found all screening times for this screening, or if we reach the end.
@@ -409,7 +415,7 @@ public class Database {
      * @param tickets Provided list that the loaded tickets will be added in to.
      */
     public void loadTickets(List<Ticket> tickets) throws SQLException {
-        // Don't load in this ticket if the selected date has passed;it is no longer valid. It can stay in the table however!
+        // Don't load in this data if the selected date has passed;it is no longer valid. It can stay in the table however!
         ResultSet result = prepare("SELECT * FROM `Ticket` WHERE `selected_date` < CURRENT_TIMESTAMP").executeQuery();
 
         while (result.next()) {
@@ -440,9 +446,9 @@ public class Database {
     }
 
     /**
-     * Deletes a singular existing ticket from the database with full precision.
+     * Deletes a singular existing data from the database with full precision.
      *
-     * @param ticket The ticket to delete.
+     * @param ticket The data to delete.
      */
     public void deleteTicket(Ticket ticket) {
         oneLinePrepare("DELETE FROM `Ticket` WHERE `screening_id`=? AND `selected_date`=? AND `allocated_seat`=?",

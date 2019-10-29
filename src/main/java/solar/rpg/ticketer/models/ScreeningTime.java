@@ -17,30 +17,11 @@ import java.text.SimpleDateFormat;
  */
 public class ScreeningTime {
 
-    /*private static final DateFormat DAY_OF_WEEK_FORMATTER = new SimpleDateFormat("EEEE");
-    private static final DateFormat MONTH_FORMATTER = new SimpleDateFormat("MMMM");
-    private static final DateFormat TIME_FORMATTER = new SimpleDateFormat("HH:mm a");*/
-
-    private Timestamp actualDate;
-    private String /*monthName,*/ dayOfWeek, time;
+    private String dayOfWeek, time;
 
     public ScreeningTime(String screeningDay, String screeningTime) {
         this.dayOfWeek = screeningDay;
         this.time = screeningTime;
-    }
-
-    /**
-     * @return Fully-detailed timestamp of when screening time will actually occur.
-     */
-    public Timestamp getActualDate() {
-        return actualDate;
-    }
-
-    /**
-     * @return Name of the month in which this screening is occurring.
-     */
-    public String getMonthName() {
-        return /*monthName*/"";
     }
 
     /**

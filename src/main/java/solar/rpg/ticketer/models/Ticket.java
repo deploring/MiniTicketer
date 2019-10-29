@@ -4,7 +4,7 @@ import java.sql.Timestamp;
 
 /**
  * Represents the 'Ticket' model in the architecture.
- * A ticket represents a seat booking at a particular screening at a particular time.
+ * A data represents a seat booking at a particular screening at a particular time.
  * All of its attributes are defined in this class.
  *
  * @author Joshua Skinner
@@ -26,28 +26,28 @@ public class Ticket {
     }
 
     /**
-     * @return The screening that this ticket is booked for.
+     * @return The screening that this data is booked for.
      */
     public Screening getScreening() {
         return screening;
     }
 
     /**
-     * @return The specific screening date that this ticket is booked for.
+     * @return The specific screening date that this data is booked for.
      */
     public Timestamp getSelectedDate() {
         return selectedDate;
     }
 
     /**
-     * @return The seat allocated to this ticket, e.g. seat B17.
+     * @return The seat allocated to this data, e.g. seat B17.
      */
     public String getAllocatedSeat() {
         return allocatedSeat;
     }
 
     /**
-     * @return Username of the customer who purchased this ticket.
+     * @return Username of the customer who purchased this data.
      */
     public String getUsername() {
         return username;

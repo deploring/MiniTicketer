@@ -11,5 +11,7 @@ public interface IView {
 
     void reset();
 
+    void update();
+
     JPanel getPanel();
 }

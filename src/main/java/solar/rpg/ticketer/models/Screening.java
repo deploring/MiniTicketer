@@ -1,7 +1,10 @@
 package solar.rpg.ticketer.models;
 
 import java.sql.Timestamp;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Represents the 'Screening' model in the architecture.
@@ -59,6 +62,23 @@ public class Screening {
      */
     public Timestamp getEndDate() {
         return endDate;
+    }
+
+    /**
+     * Sums up in casual terms how close the screening is to being over.
+     *
+     * @return Time status in casual terms.
+     */
+    public String timeStatus() {
+        long diff = getEndDate().getTime() - System.currentTimeMillis();
+        long days = TimeUnit.MILLISECONDS.toDays(diff);
+        if (TimeUnit.MILLISECONDS.toHours(diff) <= 6) return "less than six hours";
+        else if (days <= 1) return "less than a day";
+        else if (days <= 7) return "less than a week";
+        else if (days <= 14) return days + " days";
+        else if (days <= 21) return "more than a couple of weeks";
+        else if (days <= 28) return "about a month";
+        else return "more than a month";
     }
 
     /**

@@ -50,7 +50,7 @@ CREATE TABLE Screening_Times (
 );
 
 CREATE TABLE Ticket (
-	`screening_id` INT UNSIGNED NOT NULL, -- Screening that this ticket has a booking with.
+	`screening_id` INT UNSIGNED NOT NULL, -- Screening that this data has a booking with.
 	`selected_date` TIMESTAMP NOT NULL, -- Selected screening date.
 	`allocated_seat` CHAR(3) NOT NULL, -- Allocated seat number.
 	`username` CHAR(16) NOT NULL, -- Username of booking holder.

@@ -2,18 +2,15 @@ package solar.rpg.ticketer.controller;
 
 import solar.rpg.ticketer.data.Configuration;
 import solar.rpg.ticketer.data.Database;
-import solar.rpg.ticketer.models.Movie;
-import solar.rpg.ticketer.models.Screening;
-import solar.rpg.ticketer.models.Ticket;
-import solar.rpg.ticketer.models.Venue;
+import solar.rpg.ticketer.models.*;
 import solar.rpg.ticketer.views.MainView;
 
 import javax.swing.*;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.sql.Timestamp;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -21,23 +18,36 @@ import java.util.stream.Collectors;
  * <ul>
  * <li>Orchestrating database operations.</li>
  * <li>Maintaining loaded movies, screenings, and venues.</li>
- * <li>Creating, removing, and maintaining tickets.</li>
+ * <li>Creating, removing, and maintaining ticket instances.</li>
  * </ul>
+ *
+ * @author Joshua Skinner
+ * @version 1.0
+ * @since 0.1
  */
-public class TicketController {
+public class DataController {
+
+    // Useful data formatters; re-usuable so initialise them once.
+    private static final DateFormat DAY_OF_WEEK_FORMATTER = new SimpleDateFormat("EEEE");
+    private static final DateFormat MONTH_FORMATTER = new SimpleDateFormat("MMMM");
+    private static final DateFormat TIME_FORMATTER = new SimpleDateFormat("hh:mma");
 
     private final MainView main;
+
+    // Data sources.
     private Configuration config;
     private Database database;
 
     // This controller stores all the model states, and it is not freely available.
+    private final HashMap<String, Integer> currentGenres;
     private final HashMap<String, Movie> movies;
     private final HashMap<Integer, Venue> venues;
     private final HashMap<Integer, Screening> screenings;
     private final List<Ticket> tickets;
 
-    public TicketController(MainView main) throws IllegalStateException {
+    public DataController(MainView main) throws IllegalStateException {
         this.main = main;
+        this.currentGenres = new HashMap<>();
         this.movies = new HashMap<>();
         this.venues = new HashMap<>();
         this.screenings = new HashMap<>();
@@ -63,6 +73,7 @@ public class TicketController {
         try {
             database = new Database(this, config.getString("mysql_user"), config.getString("mysql_pass"), config.getString("mysql_host"), config.getString("mysql_port"), config.getString("mysql_database"));
 
+            // Load in all the data from the database.
             System.out.println(">> Checking tables...");
             database.createTables();
             System.out.println(">> Loading available Movies...");
@@ -70,9 +81,11 @@ public class TicketController {
             System.out.println(">> Loading available Venues...");
             database.loadVenues(venues);
             System.out.println(">> Loading available Screenings...");
-            database.loadScreenings(screenings);
+            database.loadScreenings(screenings, currentGenres);
             System.out.println(">> Loading purchased Tickets...");
             database.loadTickets(tickets);
+
+            // Perform cross-validation routines to ensure that data is integrous.
             System.out.println(">> Performing cross-validation...");
             crossValidate();
         } catch (SQLException | IllegalStateException e) {
@@ -132,10 +145,6 @@ public class TicketController {
         // Ensure Tickets fall within the date ranges of their screenings.
         List<Ticket> invalidTickets = new ArrayList<>();
         for (Ticket temp : tickets) {
-            System.out.println(temp);
-            System.out.println(temp.getScreening());
-            System.out.println(temp.getScreening().getStartDate());
-            System.out.println(temp.getScreening().getEndDate());
             Screening screening = temp.getScreening();
             // Invalid tickets start before or after their screening's date range.
             if (temp.getSelectedDate().before(screening.getStartDate()) || temp.getSelectedDate().after(screening.getEndDate()))
@@ -144,7 +153,7 @@ public class TicketController {
         // Purge invalid tickets.
         if (invalidTickets.size() != 0)
             for (Ticket temp : invalidTickets) {
-                System.out.println(">> WARNING!! A ticket was found outside of its screening's date range and was removed! Perhaps you were messing around with the timestamps in phpMyAdmin?");
+                System.out.println(">> WARNING!! A data was found outside of its screening's date range and was removed! Perhaps you were messing around with the timestamps in phpMyAdmin?");
                 // If enabled, delete the invalid tickets in the database so that they do not re-appear on restart.
                 if (DELETE_CORRUPTED_ROWS)
                     database.deleteTicket(temp);
@@ -184,10 +193,135 @@ public class TicketController {
     }
 
     /**
+     * @return The currently selected screening.
+     */
+    public Screening getSelectedScreening() {
+        return findScreeningByID(main.state().getSelectedScreening());
+    }
+
+    /**
      * @param screening The unique identifier of a particular screening.
      * @return All tickets that have been booked for this screening.
      */
     public List<Ticket> findTicketsByScreening(int screening) {
         return tickets.stream().filter(temp -> temp.getScreening().getID() == screening).collect(Collectors.toList());
+    }
+
+    /**
+     * Determines the number of remaining seats for a specific screening date.
+     *
+     * @param screening The screening to check.
+     * @param date      The particulate date & time of the screening.
+     * @return Number of seats available in this screening at the specified time.
+     */
+    public int calculateNumberOfAvailableSeats(Screening screening, Timestamp date) {
+        int remaining = screening.getVenue().getTotalSeats();
+        for (Ticket ticket : tickets)
+            if (ticket.getScreening().equals(screening) && ticket.getSelectedDate().equals(date))
+                remaining--;
+        return remaining;
+    }
+
+    /**
+     * @return A collection of the current active screenings.
+     */
+    Collection<Screening> getScreenings() {
+        return screenings.values();
+    }
+
+    /**
+     * @return List of genres found in the loaded screenings.
+     */
+    public Set<Map.Entry<String, Integer>> getCurrentGenreSet() {
+        return currentGenres.entrySet();
+    }
+
+    /**
+     * Calculates all potential booking times within the next 14 days for a screening.
+     *
+     * @return The list of available booking times.
+     */
+    public LinkedList<Timestamp> calculateTimes(Screening screening) {
+        // Set up minimum, maximum, and current timestamps.
+        Calendar cal = Calendar.getInstance();
+        cal.setTime(new Date());
+
+        // Go ahead 14 days to determine maximum then go back.
+        cal.add(Calendar.DAY_OF_WEEK, 14);
+        Timestamp max = new Timestamp(cal.getTime().getTime());
+        cal.setTime(new Date());
+
+        // If calculated maximum occurs after end of screening range, set it to that instead.
+        if (max.after(screening.getEndDate())) max = screening.getEndDate();
+
+        LinkedList<Timestamp> result = new LinkedList<>();
+        // Continually loop, adding 1 day each time until we've determined all reasonable days.
+        while (max.after(cal.getTime())) {
+            // Determine the calendar time of now.
+            Calendar now = Calendar.getInstance();
+            now.setTime(cal.getTime());
+            now.set(Calendar.SECOND, 0);
+            now.set(Calendar.MILLISECOND, 0);
+            String dayOfWeek = DAY_OF_WEEK_FORMATTER.format(now.getTime());
+
+            // For every incremental day, check what screening times fall upon this day.
+            for (ScreeningTime time : screening.getScreeningTimes())
+                if (time.getDayOfWeek().equals(dayOfWeek)) {
+                    try {
+                        // Determine time of day that the screening will take place, then add it.
+                        String[] times = time.getTime().split(":");
+                        int hours = Integer.parseInt(times[0]), minutes = Integer.parseInt(times[1]);
+                        now.set(Calendar.HOUR_OF_DAY, hours);
+                        now.set(Calendar.MINUTE, minutes);
+
+                        // Only add this timestamp after checking that it hasn't passed yet.
+                        Timestamp timestamp = new Timestamp(now.getTime().getTime());
+                        if (timestamp.before(new Date())) continue;
+                        result.add(timestamp);
+                    } catch (Exception ex) {
+                        System.out.println("> WARNING: Unable to process time value '" + time.getTime() + "' for screening ID #" + screening.getID());
+                    }
+                }
+            cal.add(Calendar.DAY_OF_WEEK, 1);
+        }
+        return result;
+    }
+
+    /**
+     * Converts a timestamp into a human-friendly string:
+     * "day name, nth of month @ hh:mm am/pm"
+     * e.g. "Wednesday, 30th of October, 01:00pm"
+     *
+     * @param calculatedDate A pre-calculated screening date, ideally.
+     * @return Human friendly formatted date as explained above.
+     */
+    public String friendlyDate(Date calculatedDate) {
+        Calendar cal = Calendar.getInstance();
+        cal.setTime(calculatedDate);
+        String dayOfWeek = DAY_OF_WEEK_FORMATTER.format(cal.getTime());
+        String dayNum = ordinal(cal.get(Calendar.DAY_OF_MONTH));
+        String month = MONTH_FORMATTER.format(cal.getTime());
+        String time = TIME_FORMATTER.format(cal.getTime());
+        return dayOfWeek + ", " + dayNum + " of " + month + ", " + time;
+    }
+
+    // Ordinal suffixes.
+    private static String[] SUFFIXES = new String[]{"th", "st", "nd", "rd", "th", "th", "th", "th", "th", "th"};
+
+    /**
+     * Utility method to calculate ordinals.
+     *
+     * @param i The number.
+     * @return The ordinal of the number.
+     */
+    private String ordinal(int i) {
+        switch (i % 100) {
+            case 11:
+            case 12:
+            case 13:
+                return i + "th";
+            default:
+                return i + SUFFIXES[i % 10];
+        }
     }
 }

@@ -1,41 +1,50 @@
 package solar.rpg.ticketer.views.booking;
 
-import solar.rpg.ticketer.views.IView;
 import solar.rpg.ticketer.views.MainView;
+import solar.rpg.ticketer.views.util.View;
 
 import javax.swing.*;
 import javax.swing.border.TitledBorder;
 import java.awt.*;
 
-public class BookingView implements IView {
-
-    // Reference to MainView
-    private MainView main;
+/**
+ * BookingView encompasses two smaller sub-views: MovieGridView & ArrangementView.
+ * MovieGridView allows the user to navigate a grid of squares that represent currently screening movies.
+ * ArrangementView takes a screening movie from the previous view and starts booking arrangements,
+ * such as the preferred time slot and number of attendees.
+ * <p>
+ * Overall, both seek to accomplish a flow of information such that after all of this data is defined,
+ * the user can then select where each attendee will sit at the venue where the screening takes place.
+ * This is however, done on a separate view, and is orchestrated by BookingView; the "main" view.
+ *
+ * @author Joshua Skinner
+ * @version 1.0
+ * @see BookingView
+ * @see ArrangementView
+ * @since 0.1
+ */
+public class BookingView extends View {
 
     // View Elements
-    private JPanel bookingPanel;
-    private IView movieGrid, arrangement;
+    private View movieGrid, arrangement;
 
-    BookingView(MainView main) {
-        this.main = main;
-
-        // Generate View elements.
-        generate();
+    public BookingView(MainView main) {
+        super(main);
     }
 
     @Override
     public void generate() {
         // Generate labelled border.
-        bookingPanel = new JPanel();
-        bookingPanel.setLayout(new GridLayout(1, 2));
-        bookingPanel.setBorder(BorderFactory.createTitledBorder(BorderFactory.createLineBorder(Color.GRAY, 1),
+        mainPanel.setLayout(new GridLayout(1, 2));
+        mainPanel.setBorder(BorderFactory.createTitledBorder(BorderFactory.createLineBorder(Color.GRAY, 1),
                 "Book Your Tickets Below!", TitledBorder.CENTER, TitledBorder.TOP));
 
         // Add both secondary views.
-        movieGrid = new MovieGridView(main, this);
+        movieGrid = new MovieGridView(main);
         arrangement = new ArrangementView(main, this);
-        bookingPanel.add(movieGrid.getPanel());
-        bookingPanel.add(arrangement.getPanel());
+
+        mainPanel.add(movieGrid.getPanel());
+        mainPanel.add(arrangement.getPanel());
     }
 
     @Override
@@ -50,10 +59,7 @@ public class BookingView implements IView {
         arrangement.update();
     }
 
-    @Override
-    public JPanel getPanel() {
-        return bookingPanel;
-    }
+    /* References to instances of the sub-views. */
 
     public MovieGridView movieGrid() {
         return (MovieGridView) movieGrid;

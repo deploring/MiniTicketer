@@ -1,8 +1,8 @@
 package solar.rpg.ticketer.views.booking;
 
 import solar.rpg.ticketer.models.Screening;
-import solar.rpg.ticketer.views.IView;
 import solar.rpg.ticketer.views.MainView;
+import solar.rpg.ticketer.views.util.View;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -20,33 +20,23 @@ import java.util.LinkedList;
  * @version 1.0
  * @since 0.1
  */
-public class MovieGridView implements IView {
-
-    // Reference to MainView & BookingView
-    private MainView main;
-    private BookingView booking;
+public class MovieGridView extends View {
 
     // View elements.
-    private JPanel backPanel;
-    private JPanel moviePanel;
-    private MovieSquare[] grid = new MovieSquare[6];
-    private JButton prevPage, indicator, nextPage;
+    private MovieSquare[] grid;
+    private JButton indicator;
 
-    public MovieGridView(MainView main, BookingView booking) {
-        this.main = main;
-        this.booking = booking;
-
-        generate();
+    MovieGridView(MainView main) {
+        super(main);
     }
 
     @Override
     public void generate() {
-        // The back panel houses both the grid layout and the navigation buttons.
-        backPanel = new JPanel();
-        backPanel.setLayout(new BorderLayout());
+        mainPanel.setLayout(new BorderLayout());
+        grid = new MovieSquare[6];
 
         // Initialise the grid panel and the individual 6 squares.
-        moviePanel = new JPanel();
+        JPanel moviePanel = new JPanel();
         moviePanel.setLayout(new GridLayout(3, 2));
         for (int i = 0; i < grid.length; i++) {
             MovieSquare square = new MovieSquare();
@@ -58,10 +48,10 @@ public class MovieGridView implements IView {
         JPanel paginationPanel = new JPanel();
         paginationPanel.setLayout(new GridLayout(1, 3));
         paginationPanel.setBorder(new EmptyBorder(5, 5, 5, 5));
-        prevPage = new JButton("Previous");
+        JButton prevPage = new JButton("Previous");
         indicator = new JButton("");
         indicator.setEnabled(false);
-        nextPage = new JButton("Next");
+        JButton nextPage = new JButton("Next");
         paginationPanel.add(prevPage);
         paginationPanel.add(indicator);
         paginationPanel.add(nextPage);
@@ -78,9 +68,9 @@ public class MovieGridView implements IView {
             update();
         });
 
-        // Refresh everything so it looks normal.
-        backPanel.add(moviePanel, BorderLayout.CENTER);
-        backPanel.add(paginationPanel, BorderLayout.SOUTH);
+        // Reset everything so it looks normal.
+        mainPanel.add(moviePanel, BorderLayout.CENTER);
+        mainPanel.add(paginationPanel, BorderLayout.SOUTH);
         update();
     }
 
@@ -178,10 +168,5 @@ public class MovieGridView implements IView {
     @Override
     public void reset() {
         main.state().setSelectedPage(1);
-    }
-
-    @Override
-    public JPanel getPanel() {
-        return backPanel;
     }
 }

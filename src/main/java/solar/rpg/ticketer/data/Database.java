@@ -39,7 +39,7 @@ public class Database {
         // Create database settings.
         this.user = user;
         this.pass = pass;
-        this.url = String.format("jdbc:mysql://%s:%s/?useUnicode=true&useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=UTC", hostname, port);
+        this.url = String.format("jdbc:mysql://%s:%s/", hostname, port) + "?useUnicode=true&useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=GMT%2B11";
         this.database = database;
 
         // Open the connection.
@@ -358,7 +358,7 @@ public class Database {
      * Loads valid screenings that are in their active date range from the database into the program.
      * This also includes the screening times that are closely related to the screenings.
      *
-     * @param screenings Provided map that the loaded screenings will be added in to.
+     * @param screenings    Provided map that the loaded screenings will be added in to.
      * @param currentGenres Provided map that tracks what genres exist in the current set of screenings.
      */
     public void loadScreenings(HashMap<Integer, Screening> screenings, HashMap<String, Integer> currentGenres) throws SQLException {
@@ -375,7 +375,7 @@ public class Database {
 
             // Check to see if this genre has been seen yet; add it if it hasn't.
             String genre = movie.getGenre();
-            if(!currentGenres.containsKey(genre))
+            if (!currentGenres.containsKey(genre))
                 currentGenres.put(genre, currentGenres.size());
 
             List<ScreeningTime> times = new ArrayList<>();
@@ -416,12 +416,12 @@ public class Database {
      */
     public void loadTickets(List<Ticket> tickets) throws SQLException {
         // Don't load in this data if the selected date has passed;it is no longer valid. It can stay in the table however!
-        ResultSet result = prepare("SELECT * FROM `Ticket` WHERE `selected_date` < CURRENT_TIMESTAMP").executeQuery();
+        ResultSet result = prepare("SELECT * FROM `Ticket` WHERE `selected_date` > CURRENT_TIMESTAMP").executeQuery();
 
         while (result.next()) {
             // Retrieve all of the attributes and re-construct the model for each row.
             Screening screening = controller.findScreeningByID(result.getInt("screening_id"));
-            Timestamp selectedDate = result.getTimestamp("selected_date");
+            Timestamp selectedDate = result.getTimestamp("selected_date"); // Load as string then convert using valueOf to stop time zone anomalies.
             String allocatedSeat = result.getString("allocated_seat");
             String username = result.getString("username");
 
@@ -431,6 +431,16 @@ public class Database {
         }
         System.out.println(String.format(">>> Found %s tickets!", tickets.size()));
         result.close();
+    }
+
+    /**
+     * Saves a recently-created ticket into the database so that it persists indefinitely.
+     *
+     * @param toSave The ticket to save.
+     */
+    public void saveTicket(Ticket toSave) {
+        oneLinePrepare("INSERT INTO `Ticket` (`screening_id`, `selected_date`, `allocated_seat`, `username`) VALUES (?,?,?,?);",
+                toSave.getScreening().getID(), toSave.getSelectedDate(), toSave.getAllocatedSeat(), toSave.getUsername());
     }
 
     /**

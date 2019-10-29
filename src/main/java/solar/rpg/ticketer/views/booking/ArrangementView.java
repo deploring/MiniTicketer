@@ -1,17 +1,19 @@
 package solar.rpg.ticketer.views.booking;
 
 import solar.rpg.ticketer.models.Screening;
-import solar.rpg.ticketer.views.IView;
+import solar.rpg.ticketer.models.Ticket;
 import solar.rpg.ticketer.views.MainView;
+import solar.rpg.ticketer.views.util.SpacedJButton;
+import solar.rpg.ticketer.views.util.View;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.TitledBorder;
-import javax.swing.text.SimpleAttributeSet;
-import javax.swing.text.StyleConstants;
 import java.awt.*;
 import java.sql.Timestamp;
 import java.util.LinkedList;
+import java.util.List;
+import java.util.regex.Pattern;
 
 /**
  * ArrangementView is a sub-view of BookingView
@@ -23,46 +25,31 @@ import java.util.LinkedList;
  * @version 1.0
  * @since 0.1
  */
-public class ArrangementView implements IView {
+public class ArrangementView extends View {
 
-    // Reference to MainView & BookingView
-    private MainView main;
+    // Reference to BookingView
     private BookingView booking;
 
     // View elements.
-    private JPanel backPanel;
     private JTextPane lStep1, lStep2, lStep3;
     private JTextField tStep2;
-    private JButton cancelAll, seeExisting, confirmNumbers, pickSeats;
+    private JButton cancelAll, confirmNumbers, pickSeats;
     private JComboBox<String> availableTimes;
 
     ArrangementView(MainView main, BookingView booking) {
-        this.main = main;
+        super(main);
         this.booking = booking;
-        generate();
     }
 
-    @SuppressWarnings("Duplicates")
     @Override
     public void generate() {
-        // Set some styling attributes for the text panes.
-        SimpleAttributeSet attribs = new SimpleAttributeSet();
-        StyleConstants.setAlignment(attribs, StyleConstants.ALIGN_CENTER);
-        StyleConstants.setFontSize(attribs, 14);
-
-        // Create a back panel with an empty border to emulate padding & margins.
-        backPanel = new JPanel();
-        backPanel.setLayout(new GridLayout(4, 1));
-        backPanel.setBorder(BorderFactory.createCompoundBorder(new EmptyBorder(6, 6, 6, 6), BorderFactory.createLineBorder(Color.GRAY, 1)));
+        // Give the main panel an empty border to emulate padding & margins.
+        mainPanel.setLayout(new GridLayout(4, 1));
+        mainPanel.setBorder(BorderFactory.createCompoundBorder(new EmptyBorder(6, 6, 6, 6), BorderFactory.createLineBorder(Color.GRAY, 1)));
 
         // Initialise UI elements for step 1 (picking a date and time).
-        JPanel step1 = new JPanel();
-        step1.setLayout(new BorderLayout());
-        step1.setBorder(BorderFactory.createCompoundBorder(new EmptyBorder(6, 6, 6, 6),
-                BorderFactory.createTitledBorder(BorderFactory.createLineBorder(Color.GRAY, 1), "1. Select Date & Time", TitledBorder.CENTER, TitledBorder.TOP)));
         lStep1 = new JTextPane();
-        lStep1.setEditable(false);
-        lStep1.setParagraphAttributes(attribs, true);
+        JPanel step1 = createTextSection(new BorderLayout(), "1. Select Date & Time", lStep1, BorderLayout.CENTER);
         availableTimes = new JComboBox<>();
         availableTimes.addItemListener((e) -> {
             if (availableTimes.getSelectedIndex() == 0) {
@@ -74,17 +61,11 @@ public class ArrangementView implements IView {
             main.state().setArrangementState(ArrangementState.DECIDE_ATTENDEES);
         });
 
-        step1.add(lStep1, BorderLayout.CENTER);
         step1.add(availableTimes, BorderLayout.SOUTH);
 
         // Initialise UI elements for step 2 (specifying number of attendees).
-        JPanel step2 = new JPanel();
-        step2.setLayout(new BorderLayout());
-        step2.setBorder(BorderFactory.createCompoundBorder(new EmptyBorder(6, 6, 6, 6),
-                BorderFactory.createTitledBorder(BorderFactory.createLineBorder(Color.GRAY, 1), "2. Select Number of Attendees", TitledBorder.CENTER, TitledBorder.TOP)));
         lStep2 = new JTextPane();
-        lStep2.setEditable(false);
-        lStep2.setParagraphAttributes(attribs, true);
+        JPanel step2 = createTextSection(new BorderLayout(), "2. Select Number of Attendees", lStep2, BorderLayout.CENTER);
 
         // Add a filler panel to split up the input and submission buttons for step 2.
         JPanel step2temp = new JPanel();
@@ -100,39 +81,34 @@ public class ArrangementView implements IView {
             int seatsRemaining = main.data().calculateNumberOfAvailableSeats(selected, time);
             if (seatsRemaining == 0) {
                 // Show a unique error message for completely sold out time slots.
-                JOptionPane.showMessageDialog(null, "Sorry, but unfortunately there are not seats left.\nPlease consider booking on a different time slot.", "Sold Out!", JOptionPane.WARNING_MESSAGE);
+                JOptionPane.showMessageDialog(null, "Sorry, but unfortunately there are no seats left.\nPlease consider booking on a different time slot.", "Sold Out!", JOptionPane.ERROR_MESSAGE);
                 return;
             }
             try {
                 int attendees = Integer.parseInt(tStep2.getText());
-                // Intentionally throw exceptions for invalid input so validation dialog can be displayed.
+                // Perform a few validations to make sure the booking can proceed.
                 if (attendees < 1 || selected.getVenue().getTotalSeats() < attendees) throw new NumberFormatException();
                 if (attendees > seatsRemaining) throw new IndexOutOfBoundsException();
                 main.state().setNoOfAttendees(attendees);
                 main.state().setArrangementState(ArrangementState.CONFIRM);
             } catch (NumberFormatException ex) {
-                JOptionPane.showMessageDialog(null, "Sorry, the input you supplied was invalid.\nPlease supply a number between 1 and " + seatsRemaining + "!", "Invalid Input!", JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(null, "Sorry, the input you supplied was invalid.\n" +
+                        "Please supply a number between 1 and " + seatsRemaining + "!", "Invalid Input!", JOptionPane.ERROR_MESSAGE);
             } catch (IndexOutOfBoundsException ex) {
-                JOptionPane.showMessageDialog(null, "Sorry, but unfortunately there is not enough free seats left.\nPlease consider booking on a less populated time slot.", "Not Enough Room!", JOptionPane.INFORMATION_MESSAGE);
+                JOptionPane.showMessageDialog(null, "Sorry, but unfortunately there is not enough free seats left.\n" +
+                        "Please consider booking on a less populated time slot.", "Not Enough Room!", JOptionPane.INFORMATION_MESSAGE);
             }
         });
         step2temp.add(tStep2);
         step2temp.add(confirmNumbers);
-
-        step2.add(lStep2, BorderLayout.CENTER);
         step2.add(step2temp, BorderLayout.SOUTH);
 
         // Initialise UI elements for step 3 (confirmation of selection).
-        JPanel step3 = new JPanel();
-        step3.setLayout(new GridLayout(2, 1));
-        step3.setBorder(BorderFactory.createCompoundBorder(new EmptyBorder(6, 6, 6, 6),
-                BorderFactory.createTitledBorder(BorderFactory.createLineBorder(Color.GRAY, 1), "3. Confirmation", TitledBorder.CENTER, TitledBorder.TOP)));
         lStep3 = new JTextPane();
-        lStep3.setEditable(false);
-        lStep3.setParagraphAttributes(attribs, true);
+        JPanel step3 = createTextSection(new GridLayout(2, 1), "3. Confirmation", lStep3);
         pickSeats = new JButton("Confirm & Select Seats");
         pickSeats.setEnabled(false);
-        step3.add(lStep3);
+        pickSeats.addActionListener((e) -> main.updateState(MainView.UIState.SEAT_SELECTION));
         step3.add(pickSeats);
 
         // Initialise UI elements for the miscellaneous panel.
@@ -147,17 +123,37 @@ public class ArrangementView implements IView {
         cancelAll.setEnabled(false);
         cancelAll.addActionListener((e) -> {
             // Perform a hard reset of this view; un-select a chosen screening.
-            main.state().setSelectedScreening(-1);
             main.state().setArrangementState(ArrangementState.UNDECIDED);
             booking.movieGrid().update();
         });
+        SpacedJButton viewTickets = new SpacedJButton("View Tickets", 5, 0, 5, 0);
+        JButton viewTickets1 = viewTickets.get();
+        viewTickets1.addActionListener((e) -> {
+            // Get username input before displaying tickets for said username.
+            String result = JOptionPane.showInputDialog(null, "Please enter your username:", "View Tickets", JOptionPane.QUESTION_MESSAGE);
+            if (result == null) return; // If they clicked cancel
+            if (!Pattern.compile("^[a-zA-Z0-9_]{3,16}$").matcher(result).find()) {
+                JOptionPane.showMessageDialog(null, "Your selected username is invalid. Please ensure that:\n" +
+                        "- It is between 3 and 16 characters long.\n- It only contains letters, numbers, and underscores.", "Invalid Username!", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+
+            // Find tickets under this valid username.
+            main.state().setQueryUsername(result);
+            List<Ticket> tickets = main.data().findTicketsByUsername(result);
+            if (tickets.size() == 0) {
+                JOptionPane.showMessageDialog(null, "There are no tickets under this username.", "No Tickets Found", JOptionPane.INFORMATION_MESSAGE);
+                return;
+            }
+        });
         miscBorder.add(cancelAll);
+        miscBorder.add(viewTickets);
         options.add(miscBorder);
 
-        backPanel.add(step1);
-        backPanel.add(step2);
-        backPanel.add(step3);
-        backPanel.add(options);
+        mainPanel.add(step1);
+        mainPanel.add(step2);
+        mainPanel.add(step3);
+        mainPanel.add(options);
         reset();
     }
 
@@ -222,6 +218,9 @@ public class ArrangementView implements IView {
                 lStep2.setText("Your screening on " + main.data().friendlyDate(time) + " has " + seatsRemaining + " seat(s) remaining. How many do you need?");
                 tStep2.setEnabled(true);
                 confirmNumbers.setEnabled(true);
+
+                lStep3.setText("Please enter the number of attendees before selecting your seats.");
+                pickSeats.setEnabled(false);
             }
             break;
             case CONFIRM: {
@@ -229,11 +228,6 @@ public class ArrangementView implements IView {
                 pickSeats.setEnabled(true);
             }
         }
-    }
-
-    @Override
-    public JPanel getPanel() {
-        return backPanel;
     }
 
     /**

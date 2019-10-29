@@ -1,19 +1,21 @@
 package solar.rpg.ticketer.controller;
 
 import solar.rpg.ticketer.models.Screening;
-import solar.rpg.ticketer.views.booking.ArrangementView;
+import solar.rpg.ticketer.models.Ticket;
 import solar.rpg.ticketer.views.MainView;
+import solar.rpg.ticketer.views.booking.ArrangementView;
 
+import javax.swing.*;
 import java.sql.Timestamp;
-import java.util.Iterator;
-import java.util.LinkedList;
+import java.util.*;
 
 /**
- * This controller is responsible for controlling & maintaining <em>logical</em>
- * states from all the other views, as opposed to maintaining the models.
+ * This controller is responsible for controlling & maintaining the <em>logical</em>
+ * state of the booking progress from the other views, as opposed to maintaining existing data.
  *
  * @author Joshua Skinner
  * @version 1.0
+ * @see DataController
  * @since 1.0
  */
 public class StateController {
@@ -40,10 +42,17 @@ public class StateController {
     private LinkedList<Timestamp> availableTimes;
     private Timestamp selectedTime;
     private int noOfAttendees;
+    private Set<String> selectedSeats;
+    private String bookingUsername = "";
+
+    // Current state of ticket viewing.
+    private String queryUsername = "";
+    private List<Ticket> queryTickets;
 
     public StateController(MainView main) {
         this.main = main;
         this.sortedScreenings = new LinkedList<>();
+        this.selectedSeats = new LinkedHashSet<>();
 
         // Calculate maximum amount of pages of screenings that can be shown.
         maxPage = (int) Math.ceil(main.data().getScreenings().size() / 6D);
@@ -173,10 +182,13 @@ public class StateController {
         this.state = state;
         switch (state) {
             case UNDECIDED:
+                selectedScreening = -1;
             case DECIDE_WHEN:
+                selectedSeats.clear();
                 selectedTime = null;
                 availableTimes = null;
                 noOfAttendees = -1;
+                bookingUsername = "";
                 break;
             case DECIDE_ATTENDEES:
                 noOfAttendees = -1;
@@ -231,5 +243,116 @@ public class StateController {
      */
     public void setNoOfAttendees(int noOfAttendees) {
         this.noOfAttendees = noOfAttendees;
+    }
+
+    /**
+     * Adds a seat to the currently selected seats.
+     *
+     * @param seat The seat to add to the selection set.
+     * @return True if seat was not already in the set; otherwise false.
+     */
+    public boolean addSeatSelection(String seat) {
+        if (selectedSeats.size() >= noOfAttendees) {
+            JOptionPane.showMessageDialog(null, "You cannot select any more seats! Please proceed to the next section.\nIf you wish to remove a selected seat, please click it again.", "All Seats Selected!", JOptionPane.WARNING_MESSAGE);
+            return false;
+        }
+        return selectedSeats.add(seat);
+    }
+
+    /**
+     * Removes a selected seat from the currently selected seats.
+     *
+     * @param seat The seat to remove from the selection set.
+     * @return True if the seat was in the set; otherwise false.
+     */
+    public boolean removeSeatSelection(String seat) {
+        return selectedSeats.remove(seat);
+    }
+
+    /**
+     * Checks if a particular seat has been selected by the user.
+     *
+     * @param seat The seat to check.
+     * @return True if seat is selected; false otherwise.
+     */
+    public boolean hasSelectedSeat(String seat) {
+        return selectedSeats.contains(seat);
+    }
+
+    /**
+     * @return Number of currently selected seats.
+     */
+    public int getNumOfSelectedSeats() {
+        return selectedSeats.size();
+    }
+
+    /**
+     * Completely removes all selected seats.
+     */
+    public void resetSeatSelection() {
+        selectedSeats.clear();
+    }
+
+    /**
+     * @return The set of selected seats, as a string.
+     */
+    public String selectedSeatsAsString() {
+        return Arrays.toString(selectedSeats.toArray(new String[0]));
+    }
+
+    /**
+     * @return An iterator for the selected seats set.
+     */
+    Iterator<String> seatIterator() {
+        return selectedSeats.iterator();
+    }
+
+    /**
+     * Sets the user-defined username for saving the tickets under.
+     *
+     * @param bookingUsername The username.
+     */
+    public void setBookingUsername(String bookingUsername) {
+        this.bookingUsername = bookingUsername;
+    }
+
+    /**
+     * @return The user-defined username to save the tickets under.
+     */
+    String getBookingUsername() {
+        return bookingUsername;
+    }
+
+    /**
+     * @return The user-defined username to search for existing tickets with.
+     */
+    public String getQueryUsername() {
+        return queryUsername;
+    }
+
+    /**
+     * Sets the user-defined username to search for existing tickets with.
+     *
+     * @param queryUsername Username to search for tickets.
+     */
+    public void setQueryUsername(String queryUsername) {
+        this.queryUsername = queryUsername;
+    }
+
+    /**
+     * @return List of tickets found under the query username.
+     * @see #getQueryUsername()
+     */
+    List<Ticket> getQueryTickets() {
+        return queryTickets;
+    }
+
+    /**
+     * Sets the list of found tickets under the query username.
+     *
+     * @param queryTickets List of found tickets.
+     */
+    public void setQueryTickets(List<Ticket> queryTickets) {
+        this.queryTickets = queryTickets;
     }
 }

@@ -1,8 +1,12 @@
 package solar.rpg.ticketer.views;
 
-import solar.rpg.ticketer.controller.StateController;
 import solar.rpg.ticketer.controller.DataController;
+import solar.rpg.ticketer.controller.StateController;
+import solar.rpg.ticketer.views.booking.ArrangementView;
 import solar.rpg.ticketer.views.booking.BookingView;
+import solar.rpg.ticketer.views.seats.ConfirmView;
+import solar.rpg.ticketer.views.seats.SelectionView;
+import solar.rpg.ticketer.views.util.View;
 
 import javax.swing.*;
 import java.awt.*;
@@ -21,14 +25,16 @@ import java.util.Set;
  */
 public final class MainView extends JFrame {
 
+    // Instances of the two main controllers.
     private DataController dataController;
     private StateController stateController;
 
-    private IView bookingView;
-    private JPanel holderPanel;
+    // Instances of each potential view.
+    private View bookingView, selectionView, confirmView;
 
     // Menu bar UI elements.
     private JCheckBoxMenuItem[] sortGenres;
+    private JMenu sort;
 
     public MainView() {
         super("MiniTicketer - v0.1");
@@ -37,18 +43,24 @@ public final class MainView extends JFrame {
         dataController = new DataController(this);
         stateController = new StateController(this);
 
-        setLayout(new BorderLayout());
+        getContentPane().setLayout(new BorderLayout());
         createUI();
     }
 
+    /**
+     * Initialises all UI components.
+     */
     private void createUI() {
         setupMenuBar();
         bookingView = new BookingView(this);
-        add(bookingView.getPanel(), BorderLayout.CENTER);
+        selectionView = new SelectionView(this);
+        confirmView = new ConfirmView(this);
+        updateState(UIState.INITIAL_BOOKING);
     }
 
     /**
      * Sets up a basic JMenu bar with some helpful information & tools.
+     * Amongst them is a menu that allows the user to sort the
      */
     private void setupMenuBar() {
         JMenuBar menuBar = new JMenuBar();
@@ -66,7 +78,7 @@ public final class MainView extends JFrame {
         help.add(source);
 
         // Create a menu that allows the user to select what genres to see in the grid.
-        JMenu sort = new JMenu("Sort Movies");
+        sort = new JMenu("Sort Movies");
         // Only allow the user to select genres that have some screenings on them.
         Set<Map.Entry<String, Integer>> genres = dataController.getCurrentGenreSet();
         sortGenres = new JCheckBoxMenuItem[genres.size()];
@@ -89,10 +101,88 @@ public final class MainView extends JFrame {
         setJMenuBar(menuBar);
     }
 
+    /**
+     * Completely clears selection preference for genre sorting.
+     */
     private void clearSortedGenres() {
         for (JCheckBoxMenuItem item : sortGenres)
             item.setState(false);
     }
+
+    /**
+     * Enables or disables the sorting menu.
+     * It should only be enabled when the user is on the "Booking" view.
+     *
+     * @param enabled True if sorting menu should be enabled, otherwise false.
+     */
+    private void setSort(boolean enabled) {
+        sort.setEnabled(enabled);
+
+        // When disabled, also clear any sortBy values.
+        if (!enabled) {
+            clearSortedGenres();
+            state().changeSortBy("");
+        }
+    }
+
+    /**
+     * Changes what view is being shown on the screen.
+     *
+     * @param state What should be shown?
+     */
+    public void updateState(UIState state) {
+        switch (state) {
+            case INITIAL_BOOKING:
+                stateController.setArrangementState(ArrangementView.ArrangementState.UNDECIDED);
+                booking().movieGrid().update();
+                setSort(true);
+                swap(bookingView.getPanel());
+                break;
+            case SEAT_SELECTION:
+                setSort(false);
+                selectionView.update();
+                swap(selectionView.getPanel());
+                break;
+            case CONFIRMATION:
+                confirmView.reset();
+                confirmView.update();
+                swap(confirmView.getPanel());
+                break;
+            case TICKET_REVIEW:
+                break;
+        }
+    }
+
+    /**
+     * Clears the content panel and allows a new view to be displayed.
+     *
+     * @param panel The panel to show in the empty space.
+     */
+    private void swap(JPanel panel) {
+        // Remove everything from the content panel.
+        getContentPane().removeAll();
+
+        getContentPane().add(panel, BorderLayout.CENTER);
+
+        // Revalidate the frame and content pane.
+        revalidate();
+        repaint();
+        getContentPane().revalidate();
+        getContentPane().repaint();
+    }
+
+    /**
+     * Enumerated type that defines the finite
+     * amount of states the application may be in.
+     */
+    public enum UIState {
+        INITIAL_BOOKING,
+        SEAT_SELECTION,
+        CONFIRMATION,
+        TICKET_REVIEW
+    }
+
+    /* References to instances of the controllers. */
 
     public DataController data() {
         return dataController;
@@ -102,7 +192,13 @@ public final class MainView extends JFrame {
         return stateController;
     }
 
+    /* References to instances of the views. */
+
     public BookingView booking() {
         return (BookingView) bookingView;
+    }
+
+    public SelectionView selection() {
+        return (SelectionView) selectionView;
     }
 }

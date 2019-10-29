@@ -208,6 +208,27 @@ public class DataController {
     }
 
     /**
+     * Finds all tickets of a particular screening for a particular time slot.
+     *
+     * @param screening The screening in question.
+     * @param date      The particular time slot in question.
+     * @return All tickets that match the above two criteria.
+     */
+    public List<Ticket> findTicketsByScreeningAndTime(int screening, Timestamp date) {
+        return tickets.stream().filter(temp -> temp.getScreening().getID() == screening && temp.getSelectedDate().equals(date)).collect(Collectors.toList());
+    }
+
+    /**
+     * Finds all tickets of a particular screening for a username.
+     *
+     * @param username Username that was used to make the ticket booking.
+     * @return All tickets that belong to the username.
+     */
+    public List<Ticket> findTicketsByUsername(String username) {
+        return tickets.stream().filter(temp -> temp.getUsername().equals(username)).collect(Collectors.toList());
+    }
+
+    /**
      * Determines the number of remaining seats for a specific screening date.
      *
      * @param screening The screening to check.
@@ -323,5 +344,53 @@ public class DataController {
             default:
                 return i + SUFFIXES[i % 10];
         }
+    }
+
+    /**
+     * Converts a worded seat allocation, e.g. B12, to an array index position.
+     * Seat B12 in this case would become [2, 12].
+     *
+     * @param seatAlloc Worded seat allocation.
+     * @return Array index position.
+     */
+    public int[] seatAllocToArrayPos(String seatAlloc) {
+        int row = seatAlloc.charAt(0) - 'A';
+        int col = Integer.parseInt(seatAlloc.substring(1)) - 1;
+        return new int[]{row, col};
+    }
+
+    /**
+     * Converts a seat's array index position into a worded seat allocation.
+     * e.g. [2, 12] will become seat B12.
+     *
+     * @param seatArrayPos Array index position.
+     * @return Worded seat allocation.
+     */
+    public String seatArrayPosToAlloc(int[] seatArrayPos) {
+        char row = (char) ('A' + seatArrayPos[0]);
+        return row + "" + (seatArrayPos[1] + 1);
+    }
+
+    /**
+     * Once a user clicks "Make Booking", this method creates
+     * the tickets and reflects the changes in the database.
+     */
+    public void compileBooking() {
+        // First, create all the tickets.
+        List<Ticket> result = new ArrayList<>();
+        for (Iterator<String> it = main.state().seatIterator(); it.hasNext(); ) {
+            String seat = it.next();
+            Ticket ticket = new Ticket(getSelectedScreening(), main.state().getSelectedTime(), seat, main.state().getBookingUsername());
+            result.add(ticket);
+        }
+        // Add them all to the existing ticket list too!
+        tickets.addAll(result);
+
+        // Second, insert all the tickets into the database.
+        for (Ticket ticket : result)
+            database.saveTicket(ticket);
+
+        // Send a message to the user!
+        JOptionPane.showMessageDialog(null, "Your booking has been saved & confirmed!\nTo view your tickets, please click \"View Tickets\".\nThank you!", "Booking Success!", JOptionPane.INFORMATION_MESSAGE);
     }
 }

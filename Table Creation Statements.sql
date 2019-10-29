@@ -53,7 +53,7 @@ CREATE TABLE Ticket (
 	`screening_id` INT UNSIGNED NOT NULL, -- Screening that this data has a booking with.
 	`selected_date` TIMESTAMP NOT NULL, -- Selected screening date.
 	`allocated_seat` CHAR(3) NOT NULL, -- Allocated seat number.
-	`username` CHAR(16) NOT NULL, -- Username of booking holder.
+	`bookingUsername` CHAR(16) NOT NULL, -- Username of booking holder.
 	PRIMARY KEY(`screening_id`, `selected_date`, `allocated_seat`),
 	FOREIGN KEY (`screening_id`) REFERENCES Screening(`screening_id`) -- FK1
 );

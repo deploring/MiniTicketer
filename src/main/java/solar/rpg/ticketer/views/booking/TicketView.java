@@ -13,6 +13,15 @@ import java.awt.*;
 import java.util.HashMap;
 import java.util.List;
 
+/**
+ * TicketView is a special view that requires setup from BookingView.
+ * A user must enter a username which has tickets on it using the "View Tickets" button on the booking screen.
+ * The user can then view or delete all tickets (individually or in bulk) using this view.
+ *
+ * @author Joshua Skinner
+ * @version 1.0
+ * @since 0.1
+ */
 public class TicketView extends View {
 
     // View Elements

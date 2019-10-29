@@ -4,6 +4,8 @@
 #  Modify settings as needed to   #
 #  establish connection to your   #
 #  MySQL server!                  #
+# NOTE: MySQL version 8 or higher #
+# is recommended.                 #
 ###################################
 mysql_user=root
 mysql_pass=password

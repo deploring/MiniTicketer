@@ -3,7 +3,6 @@ package solar.rpg.ticketer.views.seats;
 import solar.rpg.ticketer.models.Screening;
 import solar.rpg.ticketer.models.Ticket;
 import solar.rpg.ticketer.views.MainView;
-import solar.rpg.ticketer.views.booking.ArrangementView;
 import solar.rpg.ticketer.views.util.SpacedJButton;
 import solar.rpg.ticketer.views.util.View;
 

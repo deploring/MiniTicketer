@@ -13,6 +13,17 @@ import javax.swing.text.StyleConstants;
 import java.awt.*;
 import java.util.regex.Pattern;
 
+/**
+ * ConfirmView is preceded by SelectionView, and is the final step in the booking process.
+ * Once a user has properly allocated seats to all attendees, they are brought here.
+ * The user gets an opportunity to review their choices, and then must enter a username.
+ * The booking tickets are stored under a username so that they may be looked at/deleted later.
+ *
+ * @author Joshua Skinner
+ * @version 1.0
+ * @see solar.rpg.ticketer.views.booking.TicketView
+ * @since 0.1
+ */
 public class ConfirmView extends View {
 
     // View Elements

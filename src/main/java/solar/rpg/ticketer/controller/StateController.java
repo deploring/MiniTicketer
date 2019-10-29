@@ -8,6 +8,8 @@ import solar.rpg.ticketer.views.booking.ArrangementView;
 import javax.swing.*;
 import java.sql.Timestamp;
 import java.util.*;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 /**
  * This controller is responsible for controlling & maintaining the <em>logical</em>
@@ -46,7 +48,7 @@ public class StateController {
     private String bookingUsername = "";
 
     // Current state of ticket viewing.
-    private String queryUsername = "";
+    private String queryUsername;
     private List<Ticket> queryTickets;
 
     public StateController(MainView main) {
@@ -102,9 +104,7 @@ public class StateController {
         if (!sortBy.isEmpty()) {
             // Find all screenings that fit under the genre category.
             sortedScreenings.clear();
-            for (Screening screening : main.data().getScreenings())
-                if (screening.getMovie().getGenre().equals(sortBy))
-                    sortedScreenings.add(screening);
+            main.data().getScreenings().stream().filter(screening -> screening.getMovie().getGenre().equals(sortBy)).forEach(screening -> sortedScreenings.add(screening));
 
             // Calculate maximum amount of pages of screenings that can be shown.
             maxSortedPage = (int) Math.ceil(sortedScreenings.size() / 6D);
@@ -145,16 +145,15 @@ public class StateController {
      */
     private LinkedList<Screening> paginate(Iterator<Screening> iterator, int maxPage, int lastPageModulo) {
         if (getSelectedPage() > maxPage) throw new IllegalArgumentException("Cannot paginate when page > maxPage?");
-        LinkedList<Screening> result = new LinkedList<>();
+        LinkedList<Screening> result;
 
         // Bring the iterator to the correct starting position.
         int startingIndex = Math.max(0, (getSelectedPage() - 1) * 6);
-        for (int i = 0; i < startingIndex; i++)
-            iterator.next();
+        IntStream.range(0, startingIndex).forEachOrdered(i -> iterator.next());
 
         // Add screenings to page as long as there is still more to come.
-        for (int i = 0; i < (getSelectedPage() != maxPage || lastPageModulo == 0 ? 6 : lastPageModulo); i++)
-            result.add(iterator.next());
+        result = IntStream.range(0, (getSelectedPage() != maxPage || lastPageModulo == 0 ? 6 : lastPageModulo))
+                .mapToObj(i -> iterator.next()).collect(Collectors.toCollection(LinkedList::new));
         return result;
     }
 
@@ -327,7 +326,7 @@ public class StateController {
      * @return The user-defined username to search for existing tickets with.
      */
     public String getQueryUsername() {
-        return queryUsername;
+        return this.queryUsername;
     }
 
     /**

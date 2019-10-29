@@ -21,8 +21,8 @@ CREATE TABLE Movie (
 
 CREATE TABLE Venue (
 	`venue_no` SMALLINT UNSIGNED NOT NULL, -- Venue number, e.g. Venue 17
-	`no_of_rows` TINYINT UNSIGNED NOT NULL DEFAULT 18, -- Number of seat rows at venue.
-	`no_of_cols` TINYINT UNSIGNED NOT NULL DEFAULT 30, -- Number of seat columns at venue.
+	`no_of_rows` TINYINT UNSIGNED NOT NULL DEFAULT 6, -- Number of seat rows at venue.
+	`no_of_cols` TINYINT UNSIGNED NOT NULL DEFAULT 8, -- Number of seat columns at venue.
 	CHECK(`no_of_rows` > 0), -- Venue must have at least 1 seat row.
 	CHECK(`no_of_cols` > 0), -- Venue must have at least 1 seat column.
 	CHECK(`venue_no` > 0), -- Venue number cannot be zero.
@@ -53,7 +53,7 @@ CREATE TABLE Ticket (
 	`screening_id` INT UNSIGNED NOT NULL, -- Screening that this data has a booking with.
 	`selected_date` TIMESTAMP NOT NULL, -- Selected screening date.
 	`allocated_seat` CHAR(3) NOT NULL, -- Allocated seat number.
-	`bookingUsername` CHAR(16) NOT NULL, -- Username of booking holder.
+	`username` CHAR(16) NOT NULL, -- Username of booking holder.
 	PRIMARY KEY(`screening_id`, `selected_date`, `allocated_seat`),
 	FOREIGN KEY (`screening_id`) REFERENCES Screening(`screening_id`) -- FK1
 );

@@ -227,8 +227,8 @@ public class Database {
             oneLineExecute(connection.prepareStatement(
                     "CREATE TABLE Venue (" +
                             "`venue_no` SMALLINT UNSIGNED NOT NULL," +
-                            "`no_of_rows` TINYINT UNSIGNED NOT NULL DEFAULT 18," +
-                            "`no_of_cols` TINYINT UNSIGNED NOT NULL DEFAULT 30," +
+                            "`no_of_rows` TINYINT UNSIGNED NOT NULL DEFAULT 6," +
+                            "`no_of_cols` TINYINT UNSIGNED NOT NULL DEFAULT 8," +
                             "CHECK(`no_of_rows` > 0)," +
                             "CHECK(`no_of_cols` > 0)," +
                             "CHECK(`venue_no` > 0)," +

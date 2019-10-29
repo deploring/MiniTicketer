@@ -25,11 +25,13 @@ public class ConfirmView extends View {
         super(main);
     }
 
+    @SuppressWarnings("Duplicates")
     @Override
     public void generate() {
         mainPanel.setLayout(new GridBagLayout());
         mainPanel.setBorder(new EmptyBorder(20, 20, 20, 20));
 
+        // This panel sits in the middle of the screen, but does not take up 100% of the width.
         JPanel midPanel = new JPanel();
         midPanel.setLayout(new GridLayout(3, 1));
         midPanel.setBorder(BorderFactory.createTitledBorder(BorderFactory.createLineBorder(Color.GRAY, 1), "Please Review Your Selection", TitledBorder.CENTER, TitledBorder.TOP));
@@ -106,7 +108,7 @@ public class ConfirmView extends View {
         GridBagConstraints grid = new GridBagConstraints();
         grid.weightx = 1 / 6D;
         grid.weighty = 1;
-        grid.fill = GridBagConstraints.VERTICAL;
+        grid.fill = GridBagConstraints.BOTH;
         grid.gridx = 0;
         mainPanel.add(new JPanel(), grid);
         grid.weightx = 2 / 3D;

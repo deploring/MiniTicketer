@@ -4,6 +4,7 @@ import solar.rpg.ticketer.controller.DataController;
 import solar.rpg.ticketer.controller.StateController;
 import solar.rpg.ticketer.views.booking.ArrangementView;
 import solar.rpg.ticketer.views.booking.BookingView;
+import solar.rpg.ticketer.views.booking.TicketView;
 import solar.rpg.ticketer.views.seats.ConfirmView;
 import solar.rpg.ticketer.views.seats.SelectionView;
 import solar.rpg.ticketer.views.util.View;
@@ -29,8 +30,8 @@ public final class MainView extends JFrame {
     private DataController dataController;
     private StateController stateController;
 
-    // Instances of each potential view.
-    private View bookingView, selectionView, confirmView;
+    // Instances of each view.
+    private View bookingView, selectionView, confirmView, ticketView;
 
     // Menu bar UI elements.
     private JCheckBoxMenuItem[] sortGenres;
@@ -55,6 +56,7 @@ public final class MainView extends JFrame {
         bookingView = new BookingView(this);
         selectionView = new SelectionView(this);
         confirmView = new ConfirmView(this);
+        ticketView = new TicketView(this);
         updateState(UIState.INITIAL_BOOKING);
     }
 
@@ -149,6 +151,10 @@ public final class MainView extends JFrame {
                 swap(confirmView.getPanel());
                 break;
             case TICKET_REVIEW:
+                setSort(false);
+                ticketView.reset();
+                ticketView.update();
+                swap(ticketView.getPanel());
                 break;
         }
     }
@@ -192,13 +198,9 @@ public final class MainView extends JFrame {
         return stateController;
     }
 
-    /* References to instances of the views. */
+    /* References to instances of the necessary views. */
 
     public BookingView booking() {
         return (BookingView) bookingView;
-    }
-
-    public SelectionView selection() {
-        return (SelectionView) selectionView;
     }
 }

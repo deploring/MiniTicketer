@@ -39,8 +39,8 @@ INSERT INTO `Movie` (`name`, `running_time`, `release_year`, `genre`) VALUES ('T
 INSERT INTO `Movie` (`name`, `running_time`, `release_year`, `genre`) VALUES ('Whom', 35, 2016, 'Comedy');
 INSERT INTO `Movie` (`name`, `running_time`, `release_year`, `genre`) VALUES ('Story of My Life', 44, 2019, 'Comedy');
 INSERT INTO `Movie` (`name`, `running_time`, `release_year`, `genre`) VALUES ('The Cop-Out', 21, 2017, 'Comedy');
-INSERT INTO `Venue` (`venue_no`, `no_of_rows`, `no_of_cols`) VALUES (1, 18, 30);
-INSERT INTO `Venue` (`venue_no`, `no_of_rows`, `no_of_cols`) VALUES (2, 22, 38);
+INSERT INTO `Venue` (`venue_no`, `no_of_rows`, `no_of_cols`) VALUES (1, 5, 7);
+INSERT INTO `Venue` (`venue_no`, `no_of_rows`, `no_of_cols`) VALUES (2, 6, 9);
 INSERT INTO `Screening` (`end_date`, `movie_name`, `venue_no`, `screening_id`) VALUES (DATE_ADD(CURRENT_TIMESTAMP, INTERVAL 1 MONTH), 'Beginning of The End', 1, 1);
 INSERT INTO `Screening` (`end_date`, `movie_name`, `venue_no`, `screening_id`) VALUES (DATE_ADD(CURRENT_TIMESTAMP, INTERVAL 1 MONTH), 'Infiltration: Part II', 2, 2);
 INSERT INTO `Screening` (`end_date`, `movie_name`, `venue_no`, `screening_id`) VALUES (DATE_ADD(CURRENT_TIMESTAMP, INTERVAL 1 MONTH), 'Super Runner', 1, 3);

@@ -43,8 +43,8 @@ INSERT INTO `Movie` (`name`, `running_time`, `release_year`, `genre`) VALUES ('S
 INSERT INTO `Movie` (`name`, `running_time`, `release_year`, `genre`) VALUES ('The Cop-Out', 21, 2017, 'Comedy');
 
 -- Screenings will be held across two venues (venue 2 is slightly larger).
-INSERT INTO `Venue` (`venue_no`, `no_of_rows`, `no_of_cols`) VALUES (1, 18, 30);
-INSERT INTO `Venue` (`venue_no`, `no_of_rows`, `no_of_cols`) VALUES (2, 22, 38);
+INSERT INTO `Venue` (`venue_no`, `no_of_rows`, `no_of_cols`) VALUES (1, 5, 7);
+INSERT INTO `Venue` (`venue_no`, `no_of_rows`, `no_of_cols`) VALUES (2, 6, 9);
 
 -- Screenings have a start date of now, an end date of a month from now, calculated relatively such that when this code is executed it is always in the date range.
 -- However, `screening_id` needs to be manually set so screening times can be easily set in bulk. By default it is the next available auto-incrementing integer so in any other situation you do not need to set it.

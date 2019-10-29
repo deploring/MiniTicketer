@@ -139,12 +139,14 @@ public class ArrangementView extends View {
             }
 
             // Find tickets under this valid username.
-            main.state().setQueryUsername(result);
             List<Ticket> tickets = main.data().findTicketsByUsername(result);
             if (tickets.size() == 0) {
                 JOptionPane.showMessageDialog(null, "There are no tickets under this username.", "No Tickets Found", JOptionPane.INFORMATION_MESSAGE);
                 return;
             }
+            main.state().setQueryTickets(tickets);
+            main.state().setQueryUsername(result);
+            main.updateState(MainView.UIState.TICKET_REVIEW);
         });
         miscBorder.add(cancelAll);
         miscBorder.add(viewTickets);

@@ -2,7 +2,10 @@ package solar.rpg.ticketer.controller;
 
 import solar.rpg.ticketer.data.Configuration;
 import solar.rpg.ticketer.data.Database;
-import solar.rpg.ticketer.models.*;
+import solar.rpg.ticketer.models.Movie;
+import solar.rpg.ticketer.models.Screening;
+import solar.rpg.ticketer.models.Ticket;
+import solar.rpg.ticketer.models.Venue;
 import solar.rpg.ticketer.views.MainView;
 
 import javax.swing.*;
@@ -19,6 +22,7 @@ import java.util.stream.Collectors;
  * <li>Orchestrating database operations.</li>
  * <li>Maintaining loaded movies, screenings, and venues.</li>
  * <li>Creating, removing, and maintaining ticket instances.</li>
+ * <li>Performing miscellaneous calculation operations.</li>
  * </ul>
  *
  * @author Joshua Skinner
@@ -27,7 +31,7 @@ import java.util.stream.Collectors;
  */
 public class DataController {
 
-    // Useful data formatters; re-usuable so initialise them once.
+    // Useful data formatters; re-usable so initialise them once.
     private static final DateFormat DAY_OF_WEEK_FORMATTER = new SimpleDateFormat("EEEE");
     private static final DateFormat MONTH_FORMATTER = new SimpleDateFormat("MMMM");
     private static final DateFormat TIME_FORMATTER = new SimpleDateFormat("hh:mma");
@@ -114,52 +118,67 @@ public class DataController {
     private void crossValidate() {
         // Ensure screenings of the same movie do not have overlapping date ranges.
         List<Integer> invalid = new ArrayList<>();
-        for (Map.Entry<Integer, Screening> entry : screenings.entrySet()) {
-            Screening first = entry.getValue();
-            for (Map.Entry<Integer, Screening> entry2 : screenings.entrySet()) {
-                Screening second = entry2.getValue();
-                // Don't re-compare screenings that have been marked as invalid.
-                if (invalid.contains(first.getID()) || invalid.contains(second.getID())) continue;
-                if (first == second) continue; // Ignore exact copies, only compare against others.
-                if (!first.getMovie().equals(second.getMovie()))
-                    continue; // Only compare screenings with the same movie title.
-                // If one screening's end date comes after the other's start date, it is invalid.
-                // The reverse is also true; if one's start date comes before the other's end date, it is also invalid.
-                if (first.getEndDate().after(second.getStartDate()) ||
-                        first.getStartDate().before(second.getEndDate())) invalid.add(second.getID());
-            }
-        }
+        screenings.values().forEach(first -> {
+            // Don't re-compare screenings that have been marked as invalid.
+            // Ignore exact copies, only compare against others.
+            // Only compare screenings with the same movie title.
+            // If one screening's end date comes after the other's start date, it is invalid.
+            // The reverse is also true; if one's start date comes before the other's end date, it is also invalid.
+            screenings.values().stream().filter(second -> !invalid.contains(first.getID()) && !invalid.contains(second.getID()))
+                    .filter(second -> first != second).filter(second -> first.getMovie().equals(second.getMovie()))
+                    .filter(second -> first.getEndDate().after(second.getStartDate()) || first.getStartDate().before(second.getEndDate()))
+                    .forEach(second -> invalid.add(second.getID()));
+        });
         // Purge overlapping screenings (only one is selected to be removed, not both).
+        // Remove all local copies pertaining to this invalid screening.
+        // If enabled, reflect the exact same changes in the database also so they do not come back next restart.
         if (invalid.size() != 0)
-            for (Integer ID : invalid) {
+            invalid.forEach(ID -> {
                 System.out.println(">> WARNING!! Screening ID #%s has been detected overlapping with other screenings. It has been removed as a result.");
-                // Remove all local copies pertaining to this invalid screening.
                 screenings.remove(ID);
                 tickets.removeAll(findTicketsByScreening(ID));
-
-                // If enabled, reflect the exact same changes in the database also so they do not come back next restart.
                 if (DELETE_CORRUPTED_ROWS)
                     database.safeDeleteScreening(ID);
-            }
+            });
 
         // Ensure Tickets fall within the date ranges of their screenings.
         List<Ticket> invalidTickets = new ArrayList<>();
-        for (Ticket temp : tickets) {
+        // Invalid tickets start before or after their screening's date range.
+        tickets.forEach(temp -> {
             Screening screening = temp.getScreening();
-            // Invalid tickets start before or after their screening's date range.
             if (temp.getSelectedDate().before(screening.getStartDate()) || temp.getSelectedDate().after(screening.getEndDate()))
                 invalidTickets.add(temp);
-        }
+        });
         // Purge invalid tickets.
+        // If enabled, delete the invalid tickets in the database so that they do not re-appear on restart.
         if (invalidTickets.size() != 0)
-            for (Ticket temp : invalidTickets) {
+            invalidTickets.forEach(temp -> {
                 System.out.println(">> WARNING!! A data was found outside of its screening's date range and was removed! Perhaps you were messing around with the timestamps in phpMyAdmin?");
-                // If enabled, delete the invalid tickets in the database so that they do not re-appear on restart.
                 if (DELETE_CORRUPTED_ROWS)
                     database.deleteTicket(temp);
-            }
+            });
         // Remove all local copies of all invalid tickets.
         tickets.removeAll(invalidTickets);
+    }
+
+    /**
+     * Deletes a ticket- both locally and externally.
+     *
+     * @param toDelete Ticket to delete.
+     */
+    public void deleteTicket(Ticket toDelete) {
+        tickets.remove(toDelete);
+        database.deleteTicket(toDelete);
+    }
+
+    /**
+     * Deletes a list of tickets.
+     *
+     * @param toDelete The tickets to delete.
+     * @see #deleteTicket(Ticket)
+     */
+    public void deleteTickets(List<Ticket> toDelete) {
+        toDelete.forEach(this::deleteTicket);
     }
 
     /**
@@ -203,7 +222,7 @@ public class DataController {
      * @param screening The unique identifier of a particular screening.
      * @return All tickets that have been booked for this screening.
      */
-    public List<Ticket> findTicketsByScreening(int screening) {
+    private List<Ticket> findTicketsByScreening(int screening) {
         return tickets.stream().filter(temp -> temp.getScreening().getID() == screening).collect(Collectors.toList());
     }
 
@@ -286,23 +305,22 @@ public class DataController {
             String dayOfWeek = DAY_OF_WEEK_FORMATTER.format(now.getTime());
 
             // For every incremental day, check what screening times fall upon this day.
-            for (ScreeningTime time : screening.getScreeningTimes())
-                if (time.getDayOfWeek().equals(dayOfWeek)) {
-                    try {
-                        // Determine time of day that the screening will take place, then add it.
-                        String[] times = time.getTime().split(":");
-                        int hours = Integer.parseInt(times[0]), minutes = Integer.parseInt(times[1]);
-                        now.set(Calendar.HOUR_OF_DAY, hours);
-                        now.set(Calendar.MINUTE, minutes);
+            screening.getScreeningTimes().stream().filter(time -> time.getDayOfWeek().equals(dayOfWeek)).forEach(time -> {
+                try {
+                    // Determine time of day that the screening will take place, then add it.
+                    String[] times = time.getTime().split(":");
+                    int hours = Integer.parseInt(times[0]), minutes = Integer.parseInt(times[1]);
+                    now.set(Calendar.HOUR_OF_DAY, hours);
+                    now.set(Calendar.MINUTE, minutes);
 
-                        // Only add this timestamp after checking that it hasn't passed yet.
-                        Timestamp timestamp = new Timestamp(now.getTime().getTime());
-                        if (timestamp.before(new Date())) continue;
-                        result.add(timestamp);
-                    } catch (Exception ex) {
-                        System.out.println("> WARNING: Unable to process time value '" + time.getTime() + "' for screening ID #" + screening.getID());
-                    }
+                    // Only add this timestamp after checking that it hasn't passed yet.
+                    Timestamp timestamp = new Timestamp(now.getTime().getTime());
+                    if (timestamp.before(new Date())) return;
+                    result.add(timestamp);
+                } catch (Exception ex) {
+                    System.out.println("> WARNING: Unable to process time value '" + time.getTime() + "' for screening ID #" + screening.getID());
                 }
+            });
             cal.add(Calendar.DAY_OF_WEEK, 1);
         }
         return result;
@@ -354,6 +372,7 @@ public class DataController {
      * @return Array index position.
      */
     public int[] seatAllocToArrayPos(String seatAlloc) {
+        // This method is unused, but I will keep it here just in case.
         int row = seatAlloc.charAt(0) - 'A';
         int col = Integer.parseInt(seatAlloc.substring(1)) - 1;
         return new int[]{row, col};
@@ -387,10 +406,29 @@ public class DataController {
         tickets.addAll(result);
 
         // Second, insert all the tickets into the database.
-        for (Ticket ticket : result)
-            database.saveTicket(ticket);
+        result.forEach(ticket -> database.saveTicket(ticket));
 
         // Send a message to the user!
         JOptionPane.showMessageDialog(null, "Your booking has been saved & confirmed!\nTo view your tickets, please click \"View Tickets\".\nThank you!", "Booking Success!", JOptionPane.INFORMATION_MESSAGE);
+    }
+
+    /**
+     * Re-maps a username query ticket list into something more easily presentable.
+     * In this case, it takes each tick it, and groups them by screening, or rather, by movie.
+     * Grouping is done by movie because it is simplier and two screenings of the same movie cannot happen.
+     *
+     * @return Movies, mapped to individual lists of tickets.
+     * @see #findTicketsByUsername(String)
+     */
+    public HashMap<Movie, List<Ticket>> remapTickets() {
+        HashMap<Movie, List<Ticket>> result = new HashMap<>();
+
+        main.state().getQueryTickets().forEach(ticket -> {
+            Movie movie = ticket.getScreening().getMovie();
+            List<Ticket> ticketsInMovie = result.getOrDefault(movie, new ArrayList<>());
+            if (ticketsInMovie.isEmpty()) result.put(movie, ticketsInMovie);
+            ticketsInMovie.add(ticket);
+        });
+        return result;
     }
 }

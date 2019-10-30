@@ -24,7 +24,7 @@ public class Database {
     private Connection connection;
 
     // Reference to DataController for utility methods.
-    private DataController controller;
+    private final DataController controller;
 
     /**
      * @param user     MySQL server username.

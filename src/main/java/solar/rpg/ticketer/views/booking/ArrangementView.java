@@ -28,7 +28,7 @@ import java.util.regex.Pattern;
 public class ArrangementView extends View {
 
     // Reference to BookingView
-    private BookingView booking;
+    private final BookingView booking;
 
     // View elements.
     private JTextPane lStep1, lStep2, lStep3;

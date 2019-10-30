@@ -2,11 +2,11 @@ MiniTicketer
 =
 A proof-of-concept program that allows users to book tickets for _screenings_. 
 A screening is a period of time where a _movie_ is shown at a _venue_. Venues are numbered,
-and they have a specified seating dimension (rows x columns).
+and they have a specified seating dimension (rows x columns). Please check `IntegraDev Proposal + Plan.pdf`, `Table Creation Statements.sql`, and `Table UML Diagram.png` for more detailed insight.
 
 Compilation
 -
-**Note**: A pre-compiled JAR file exists in the repository already.
+**Note**: A pre-compiled `MiniTicketer.JAR` file exists in the repository already. You can double click it to run the program instead of compiling a JAR yourself!
 
 Otherwise, you will need to use [Maven](https://maven.apache.org/) to compile. 
 Once Maven is installed, type the following into your commandline:
@@ -30,7 +30,7 @@ When running the program for the first time:
 
 Quick-Start Guide
 -
-There is a quick start guide included with the program in the *About* section of the top menu. This one is a little bit more comprehensive. Here's a quick demonstration of program flow:
+There is also a quick start guide included with the program in the *About* section of the top menu. This one is a little bit more comprehensive. Here's a quick demonstration of program flow:
 1. Open MiniTicketer.
 2. On the left half of the screen, navigate through the pages of available movie screenings and click "Book Now" on one that you find interesting!
 3. Once you have selected a screening to book, the dropdown list on the right side will now be enabled. Select a date+time slot that suits you. _Note: Each screening only plays at certain days and times!_
@@ -44,6 +44,10 @@ There is a quick start guide included with the program in the *About* section of
 > **TIP 1:** Too many movies? Try sorting by a specific genre using the tool in the top menu!
 
 > **TIP 2:** If you have selected a large number of attendees, try using the "auto select" feature to automatically select enough seats for all of your attendees!
+
+> **TIP 3:** If you are not happy with your seat selection, you can return to the seat allocation screen from the final confirmation screen!
+
+> **TIP 4:** To see logging during runtime, run `MiniTicketer.jar` through your command line using `java -jar MiniTicketer.jar`.
 
 Before Modifying the Database...
 -

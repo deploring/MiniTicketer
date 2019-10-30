@@ -1,9 +1,5 @@
 package solar.rpg.ticketer.models;
 
-import java.sql.Timestamp;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
-
 /**
  * A helper object that better represents a "day and time" that a screening will be shown.
  * e.g. if the value is Tuesday 12.30pm, a screening will happen at
@@ -17,7 +13,8 @@ import java.text.SimpleDateFormat;
  */
 public class ScreeningTime {
 
-    private String dayOfWeek, time;
+    private final String dayOfWeek;
+    private final String time;
 
     public ScreeningTime(String screeningDay, String screeningTime) {
         this.dayOfWeek = screeningDay;

@@ -27,8 +27,8 @@ import java.util.Set;
 public final class MainView extends JFrame {
 
     // Instances of the two main controllers.
-    private DataController dataController;
-    private StateController stateController;
+    private final DataController dataController;
+    private final StateController stateController;
 
     // Instances of each view.
     private View bookingView, selectionView, confirmView, ticketView;

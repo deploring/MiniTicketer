@@ -14,7 +14,7 @@ import java.awt.*;
  */
 public class SpacedJButton extends JPanel {
 
-    private JButton button;
+    private final JButton button;
 
     public SpacedJButton(String text, int top, int left, int bottom, int right) {
         setLayout(new BorderLayout());

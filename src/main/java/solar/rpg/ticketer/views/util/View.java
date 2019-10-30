@@ -25,14 +25,14 @@ public abstract class View {
     // All UI elements should be placed on this panel.
     protected JPanel mainPanel;
 
-    public View(MainView main) {
+    protected View(MainView main) {
         this.main = main;
         mainPanel = new JPanel();
         generate();
     }
 
     // Set some styling attributes for use with JTextPanes.
-    protected static SimpleAttributeSet ATTRIB_CENTER = new SimpleAttributeSet();
+    protected static final SimpleAttributeSet ATTRIB_CENTER = new SimpleAttributeSet();
 
     static {
         StyleConstants.setAlignment(ATTRIB_CENTER, StyleConstants.ALIGN_CENTER);
@@ -43,7 +43,7 @@ public abstract class View {
      * Called upon construction of a View.
      * All UI elements should be instantiated using this method.
      */
-    public abstract void generate();
+    protected abstract void generate();
 
     /**
      * Can be called for any reason.

@@ -81,9 +81,8 @@ public class MovieGridView extends View {
     private class MovieSquare extends JPanel {
 
         // UI elements in an individual square.
-        private JTextPane titleText;
-        private JTextPane subtitleText;
-        private JButton book;
+        private final JTextPane titleText, subtitleText;
+        private final JButton book;
 
         // Logical elements
         private int screeningID = -1;

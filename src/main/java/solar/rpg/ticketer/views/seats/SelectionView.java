@@ -77,8 +77,9 @@ public class SelectionView extends View {
     private class SeatSelection extends JPanel {
 
         // Grid dimension information/state.
-        private int rows, cols;
-        private JButton[][] seatButtons;
+        private final int rows;
+        private final int cols;
+        private final JButton[][] seatButtons;
 
         SeatSelection() {
             // Determine important variables from previous section.

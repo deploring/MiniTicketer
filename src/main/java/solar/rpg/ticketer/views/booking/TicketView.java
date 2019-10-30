@@ -27,7 +27,6 @@ public class TicketView extends View {
     // View Elements
     private JScrollPane scroll;
     private JPanel midPanel, currentTickets;
-    private JButton goBack;
 
     public TicketView(MainView main) {
         super(main);
@@ -50,8 +49,8 @@ public class TicketView extends View {
         scroll.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
 
         SpacedJButton goBack = new SpacedJButton("Return to Booking Area", 10, 10, 10, 10);
-        this.goBack = goBack.get();
-        this.goBack.addActionListener((e) -> main.updateState(MainView.UIState.INITIAL_BOOKING));
+        JButton goBack1 = goBack.get();
+        goBack1.addActionListener((e) -> main.updateState(MainView.UIState.INITIAL_BOOKING));
 
         midPanel.add(scroll);
         midPanel.add(goBack, BorderLayout.SOUTH);
@@ -104,6 +103,15 @@ public class TicketView extends View {
         SwingUtilities.invokeLater(() -> scroll.getVerticalScrollBar().setValue(0));
     }
 
+    /**
+     * Represents an overall movie section inside this view.
+     * Tickets belonging to the specified movie are shown inside this display.
+     * All tickets for this movie can be bulk deleted, or they can be deleted individually.
+     *
+     * @author Joshua Skinner
+     * @version 1.0
+     * @since 0.1
+     */
     private class MovieTicketsDisplay extends JPanel {
 
         MovieTicketsDisplay(Movie movie, List<Ticket> tickets) {
@@ -113,6 +121,7 @@ public class TicketView extends View {
                             "Tickets for " + movie.getName() + " (" + movie.getReleaseYear() + ")", TitledBorder.CENTER, TitledBorder.TOP)));
             setLayout(new GridBagLayout());
 
+            // Setup layout constraints for the rows.
             GridBagConstraints outerGrid = new GridBagConstraints();
             outerGrid.weightx = 1;
             outerGrid.ipady = 3;
@@ -167,7 +176,7 @@ public class TicketView extends View {
                     }
                 });
 
-                // Setup constraints for each of the three UI elements.
+                // Setup layout constraints for the columns.
                 GridBagConstraints innerGrid = new GridBagConstraints();
                 innerGrid.fill = GridBagConstraints.HORIZONTAL;
                 innerGrid.weightx = 0.5;

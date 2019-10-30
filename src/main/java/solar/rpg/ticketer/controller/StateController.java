@@ -23,19 +23,19 @@ import java.util.stream.IntStream;
 public class StateController {
 
     // Reference to MainView.
-    private MainView main;
+    private final MainView main;
 
     // Movie Grid View page & screening selection states.
     private int selectedPage = 1;
     private int selectedScreening = -1;
 
     // Calculations for regular grid view.
-    private int maxPage;
-    private int lastPageModulo;
+    private final int maxPage;
+    private final int lastPageModulo;
 
     // Calculations & elements for sorted grid view.
     private String sortBy = "";
-    private LinkedList<Screening> sortedScreenings;
+    private final LinkedList<Screening> sortedScreenings;
     private int maxSortedPage;
     private int lastSortedPageModulo;
 
@@ -44,7 +44,7 @@ public class StateController {
     private LinkedList<Timestamp> availableTimes;
     private Timestamp selectedTime;
     private int noOfAttendees;
-    private Set<String> selectedSeats;
+    private final Set<String> selectedSeats;
     private String bookingUsername = "";
 
     // Current state of ticket viewing.
@@ -117,6 +117,8 @@ public class StateController {
     }
 
     /**
+     * This is unused, but I will keep it anyway.
+     *
      * @return What genre the movie grid is being sorted by, if anything.
      */
     public String getSortBy() {

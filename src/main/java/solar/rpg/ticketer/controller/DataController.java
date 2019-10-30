@@ -345,7 +345,7 @@ public class DataController {
     }
 
     // Ordinal suffixes.
-    private static String[] SUFFIXES = new String[]{"th", "st", "nd", "rd", "th", "th", "th", "th", "th", "th"};
+    private static final String[] SUFFIXES = new String[]{"th", "st", "nd", "rd", "th", "th", "th", "th", "th", "th"};
 
     /**
      * Utility method to calculate ordinals.

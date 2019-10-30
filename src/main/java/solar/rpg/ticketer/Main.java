@@ -11,6 +11,13 @@ import java.awt.*;
 public class Main {
 
     public static void main(String[] args) {
+        // Use a cross-platform look-and-feel so Mac doesn't look cross.
+        try {
+            UIManager.setLookAndFeel(UIManager.getCrossPlatformLookAndFeelClassName());
+        } catch (ClassNotFoundException | InstantiationException | IllegalAccessException | UnsupportedLookAndFeelException e) {
+            e.printStackTrace();
+        }
+
         MainView displayFrame = new MainView();
         // Set JFrame attributes
         displayFrame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
